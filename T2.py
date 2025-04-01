@@ -1,51 +1,56 @@
-import re
-
 def solution(S):
-    
-    day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    days = {
+        'Sun': [0] * 24 * 60,
+        'Mon': [0] * 24 * 60,
+        'Tue': [0] * 24 * 60,
+        'Wed': [0] * 24 * 60,
+        'Thu': [0] * 24 * 60,
+        'Fri': [0] * 24 * 60,
+        'Sat': [0] * 24 * 60
+    }
 
-    clock = re.split('\s', S)
-    m = {day[i]: [] for i in range(0, len(day))}
-    max_time = {day[i]: 0 for i in range(0, len(day))}
-    tail_time = {day[i]: 0 for i in range(0, len(day))}
+    sc = S.split()
+    for idx in range(0, len(sc), 2):
+        day, times = sc[idx], sc[idx+1]
+        start, end = times.split('-')
+        start_hour, start_minute = start.split(':')
+        end_hour, end_minute = end.split(':')
+        start_point, end_point = int(start_hour) * 60 + int(start_minute), int(end_hour) * 60 + int(end_minute)
+        days[day][start_point:end_point] = [1] * (end_point - start_point)
 
-    for i in range(0, len(clock), 2):
-        m[clock[i]].append(clock[i + 1])
-        m[clock[i]].sort()
-    
-    for key in m.keys():
-        time = m[key]
-        end_h = 0
-        end_m = 0
-        for i in range(0, len(time)):
+    max_free = 0
+    max_free_start_day, max_free_start_index = 'Sun', 0
+    max_free_end_day, max_free_end_index = 'Sun', 0
+    temp_start_day, temp_start_index = 'Sun', 0
 
-            hh = (int(time[i][:2]) - end_h) * 60
-            mm = (int(time[i][3:5]) - end_m)
-            end_h = (int(time[i][6:8]))
-            end_m = (int(time[i][9:]))
-            max_time[key] = max(max_time[key], hh + mm)
+    count = 0
+    for day in days:
+        for i, point in enumerate(days[day]):
+            if point == 0:
+                if count == 0:
+                    temp_start_day, temp_start_index = day, i
+                count += 1
+            else:
+                if count >= max_free:
+                    max_free = count
+                    max_free_end_day, max_free_end_index = day, i
+                    max_free_start_day, max_free_start_index = temp_start_day, temp_start_index
+                count = 0
 
-            if i == len(time) - 1:
-                hh = (int(24 - end_h)) * 60
-                mm = (int(0 - end_m))
-                tail_time[key] = hh + mm
-                max_time[key] = max(max_time[key], tail_time[key])
-                print(hh, mm, tail_time[key])
-            
-            if i == 0 and key != 'Sun':
-                max_time[key] = max(max_time[key], max_time[key] + tail_time[day[(day.index(key) + 6) % 7]])
-        
-                
-    # Mon_first_time = int(m['Mon'][0][:2]) * 60
-    # max_time['Mon'] = max(max_time['Mon'], Mon_first_time + tail_time['Sun'])
-
-    print(max_time)
-
-    return max(max_time.values())
+    print("Max free time:\t", f"{max_free // 60:02d}h {max_free % 60:02d}m ({max_free} minutes)")
+    print("Schedule: \t", f"{max_free_start_day} {max_free_start_index // 60:02d}:{max_free_start_index % 60:02d} - {max_free_end_day} {max_free_end_index // 60:02d}:{max_free_end_index % 60:02d}")
 
 
 # 找出最長的空閒時間
+# 假設週日為每週的第一天，且不考慮週六到隔週日的情況
+schedule = (
+    "Sun 01:00-04:00 Sun 10:00-20:00 "
+    "Mon 01:00-13:00 Mon 15:00-21:00 "
+    "Tue 03:30-18:15 Tue 19:00-20:00 "
+    "Wed 04:25-15:14 Wed 16:14-22:40 "
+    "Thu 00:00-23:59 "
+    "Fri 05:00-10:00 Fri 16:30-23:50 "
+    "Sat 10:00-24:00 Sat 02:00-06:00"
+)
 
-# A = 'Sun 10:00-20:00 Fri 05:00-10:00 Fri 16:30-23:50 Sat 10:00-24:00 Sun 01:00-04:00 Sat 02:00-06:00 Tue 03:30-18:15 Tue 19:00-20:00 Wed 04:25-15:14 Wed 15:14-22:40 Thu 00:00-23:59 Mon 05:00-13:00 Mon 15:00-21:00'
-# A = 'Mon 01:00-23:00\nTue 01:00-23:00\nWed 01:00-23:00\nThu 01:00-20:00\nFri 01:00-23:00\nSat 01:00-23:00\nSun 01:00-21:00' 
-# print(solution(A))
+solution(schedule)
